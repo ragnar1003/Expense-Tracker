@@ -13,6 +13,7 @@
   "author": "Shivam",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^3.0.2",
     "colors": "^1.4.0",
     "concurrently": "^8.2.2",
     "cors": "^2.8.5",

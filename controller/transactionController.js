@@ -1,59 +1,62 @@
 const transactionModel = require("../model/TransactionModel");
-const TransactionModel = require("../model/TransactionModel");
 const moment = require("moment");
+
 const getAllTransaction = async (req, res) => {
   try {
-    const { frequency, selectDate, type } = req.body;
-    const transaction = await TransactionModel.find({
-      ...(frequency !== "custom"
-        ? {
-            date: {
-              $gt: moment().subtract(Number(frequency), "d"),
-            },
-          }
-        : {
-            date: {
-              $gte: selectDate[0],
-              $lte: selectDate[1],
-            },
-          }),
-      userid: req.body.userid,
-      ...(type !== "all" && { type }),
-    });
-    res.status(201).json(transaction);
+    const { frequency, selectDate, type, userid } = req.query;
+    const query = {
+      userid: userid,
+    };
+    if (frequency !== "custom") {
+      query.date = {
+        $gt: moment().subtract(Number(frequency), "d").toDate(),
+      };
+    } else {
+      query.date = {
+        $gte: selectDate[0],
+        $lte: selectDate[1],
+      };
+    }
+    if (type !== "all") {
+      query.type = type;
+    }
+    const transactions = await transactionModel.find(query);
+    res.status(200).json(transactions);
   } catch (error) {
     console.log(error);
-    res.status(500).json(error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
 const editTransaction = async (req, res) => {
   try {
     await transactionModel.findOneAndUpdate(
-      { _id: req.body.transactionId },
-      req.body.payload
+      { _id: req.params.id },
+      req.body
     );
-    res.status(201).json({ message: "Transaction updated successfully" });
+    res.status(200).json({ message: "Transaction updated successfully" });
   } catch (error) {
-    res.status(500).json(error);
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 const deleteTransaction = async (req, res) => {
   try {
-    await transactionModel.findOneAndDelete({ _id: req.body.transactionId });
-    res.status(200).send('Transaction Deleted Successfully')
+    await transactionModel.findOneAndDelete({ _id: req.params.id });
+    res.status(200).json({ message: "Transaction deleted successfully" });
   } catch (error) {
-    res.status(500).json(error);
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 const addTransaction = async (req, res) => {
   try {
-    const newTransaction = new TransactionModel(req.body);
+    const newTransaction = new transactionModel(req.body);
     await newTransaction.save();
-    res.status(201).send("Transaction Created");
+    res.status(201).json({ message: "Transaction created successfully" });
   } catch (error) {
     console.log(error);
-    res.status(500).json(error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
